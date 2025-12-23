@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Confetti from 'react-confetti';
+import Editor from '@monaco-editor/react';
 import { useScaffoldedLearning } from './hooks/useScaffoldedLearning';
 import { sampleProblem } from './data/sampleProblem';
 import { patternVault } from './data/patternVault';
+import { languages, getFileName, editorOptions } from './data/languageConfig';
 import {
   reviewCode,
   generateHint,
@@ -284,10 +286,142 @@ function ValidationMessage({ message, isError }) {
 }
 
 /**
- * Code editor component (simplified textarea)
+ * Language icon component for the editor
+ */
+function LanguageIcon({ language, className = "w-5 h-5" }) {
+  const icons = {
+    python: (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M11.914 0C5.82 0 6.2 2.656 6.2 2.656l.007 2.752h5.814v.826H3.9S0 5.789 0 11.969c0 6.18 3.403 5.96 3.403 5.96h2.03v-2.867s-.109-3.42 3.35-3.42h5.766s3.24.052 3.24-3.148V3.202S18.28 0 11.914 0zM8.708 1.85c.578 0 1.046.47 1.046 1.052 0 .581-.468 1.051-1.046 1.051-.579 0-1.046-.47-1.046-1.051 0-.582.467-1.052 1.046-1.052z"/>
+        <path d="M12.086 24c6.094 0 5.714-2.656 5.714-2.656l-.007-2.752h-5.814v-.826h8.121s3.9.445 3.9-5.735c0-6.18-3.403-5.96-3.403-5.96h-2.03v2.867s.109 3.42-3.35 3.42H9.451s-3.24-.052-3.24 3.148v5.292S5.72 24 12.086 24zm3.206-1.85c-.578 0-1.046-.47-1.046-1.052 0-.581.468-1.051 1.046-1.051.579 0 1.046.47 1.046 1.051 0 .582-.467 1.052-1.046 1.052z"/>
+      </svg>
+    ),
+    javascript: (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M0 0h24v24H0V0zm22.034 18.276c-.175-1.095-.888-2.015-3.003-2.873-.736-.345-1.554-.585-1.797-1.14-.091-.33-.105-.51-.046-.705.15-.646.915-.84 1.515-.66.39.12.75.42.976.9 1.034-.676 1.034-.676 1.755-1.125-.27-.42-.404-.601-.586-.78-.63-.705-1.469-1.065-2.834-1.034l-.705.089c-.676.165-1.32.525-1.71 1.005-1.14 1.291-.811 3.541.569 4.471 1.365 1.02 3.361 1.244 3.616 2.205.24 1.17-.87 1.545-1.966 1.41-.811-.18-1.26-.586-1.755-1.336l-1.83 1.051c.21.48.45.689.81 1.109 1.74 1.756 6.09 1.666 6.871-1.004.029-.09.24-.705.074-1.65l.046.067zm-8.983-7.245h-2.248c0 1.938-.009 3.864-.009 5.805 0 1.232.063 2.363-.138 2.711-.33.689-1.18.601-1.566.48-.396-.196-.597-.466-.83-.855-.063-.105-.11-.196-.127-.196l-1.825 1.125c.305.63.75 1.172 1.324 1.517.855.51 2.004.675 3.207.405.783-.226 1.458-.691 1.811-1.411.51-.93.402-2.07.397-3.346.012-2.054 0-4.109 0-6.179l.004-.056z"/>
+      </svg>
+    ),
+    java: (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M8.851 18.56s-.917.534.653.714c1.902.218 2.874.187 4.969-.211 0 0 .552.346 1.321.646-4.699 2.013-10.633-.118-6.943-1.149M8.276 15.933s-1.028.761.542.924c2.032.209 3.636.227 6.413-.308 0 0 .384.389.987.602-5.679 1.661-12.007.13-7.942-1.218M13.116 11.475c1.158 1.333-.304 2.533-.304 2.533s2.939-1.518 1.589-3.418c-1.261-1.772-2.228-2.652 3.007-5.688 0-.001-8.216 2.051-4.292 6.573M19.33 20.504s.679.559-.747.991c-2.712.822-11.288 1.069-13.669.033-.856-.373.75-.89 1.254-.998.527-.114.828-.093.828-.093-.953-.671-6.156 1.317-2.643 1.887 9.58 1.553 17.462-.7 14.977-1.82M9.292 13.21s-4.362 1.036-1.544 1.412c1.189.159 3.561.123 5.77-.062 1.806-.152 3.618-.477 3.618-.477s-.637.272-1.098.587c-4.429 1.165-12.986.623-10.522-.568 2.082-1.006 3.776-.892 3.776-.892M17.116 17.584c4.503-2.34 2.421-4.589.968-4.285-.355.074-.515.138-.515.138s.132-.207.385-.297c2.875-1.011 5.086 2.981-.928 4.562 0-.001.07-.062.09-.118M14.401 0s2.494 2.494-2.365 6.33c-3.896 3.077-.889 4.832 0 6.836-2.274-2.053-3.943-3.858-2.824-5.539 1.644-2.469 6.197-3.665 5.189-7.627M9.734 23.924c4.322.277 10.959-.153 11.116-2.198 0 0-.302.775-3.572 1.391-3.688.694-8.239.613-10.937.168 0-.001.553.457 3.393.639"/>
+      </svg>
+    ),
+  };
+  return icons[language] || icons.python;
+}
+
+/**
+ * Language Selector Component
+ */
+function LanguageSelector({ selectedLanguage, supportedLanguages, onLanguageChange, disabled = false }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const currentLang = languages[selectedLanguage];
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        disabled={disabled}
+        className={`
+          flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
+          ${disabled
+            ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+            : 'bg-slate-700 hover:bg-slate-600 text-white cursor-pointer'
+          }
+        `}
+      >
+        <LanguageIcon language={selectedLanguage} className="w-4 h-4" />
+        <span>{currentLang?.name || 'Python'}</span>
+        <svg className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      </button>
+
+      {isOpen && !disabled && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+          <div className="absolute top-full left-0 mt-1 w-48 bg-slate-800 rounded-lg shadow-xl border border-slate-700 overflow-hidden z-20">
+            {supportedLanguages.map((langId) => {
+              const lang = languages[langId];
+              if (!lang) return null;
+
+              const isSelected = langId === selectedLanguage;
+
+              return (
+                <button
+                  key={langId}
+                  onClick={() => {
+                    onLanguageChange(langId);
+                    setIsOpen(false);
+                  }}
+                  className={`
+                    w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors
+                    ${isSelected
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-300 hover:bg-slate-700'
+                    }
+                  `}
+                >
+                  <LanguageIcon language={langId} className="w-5 h-5" />
+                  <span className="font-medium">{lang.name}</span>
+                  {isSelected && (
+                    <svg className="w-4 h-4 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Monaco Code editor component with multi-language support
  * Supports read-only mode for reviewing previous steps
  */
-function CodeEditor({ code, onChange, placeholder, readOnly = false }) {
+function CodeEditor({ code, onChange, language = 'python', readOnly = false }) {
+  const editorRef = useRef(null);
+
+  // Handle editor mount
+  const handleEditorDidMount = (editor, monaco) => {
+    editorRef.current = editor;
+
+    // Define custom theme
+    monaco.editor.defineTheme('scaffolded-dark', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [
+        { token: 'comment', foreground: '6A9955', fontStyle: 'italic' },
+        { token: 'keyword', foreground: 'C586C0' },
+        { token: 'string', foreground: 'CE9178' },
+        { token: 'number', foreground: 'B5CEA8' },
+        { token: 'function', foreground: 'DCDCAA' },
+        { token: 'variable', foreground: '9CDCFE' },
+        { token: 'type', foreground: '4EC9B0' },
+        { token: 'class', foreground: '4EC9B0' },
+      ],
+      colors: {
+        'editor.background': '#1E293B',
+        'editor.foreground': '#D4D4D4',
+        'editor.lineHighlightBackground': '#334155',
+        'editorLineNumber.foreground': '#6B7280',
+        'editorCursor.foreground': '#22D3EE',
+        'editor.selectionBackground': '#264F78',
+        'editor.inactiveSelectionBackground': '#3A3D41',
+      },
+    });
+
+    monaco.editor.setTheme('scaffolded-dark');
+  };
+
+  const fileName = getFileName(language);
+  const monacoLanguage = languages[language]?.monacoId || 'python';
+
   return (
     <div className="h-full flex flex-col">
       <div className={`px-4 py-2 rounded-t-lg border-b ${readOnly ? 'bg-slate-700 border-slate-600' : 'bg-slate-800 border-slate-700'}`}>
@@ -295,7 +429,10 @@ function CodeEditor({ code, onChange, placeholder, readOnly = false }) {
           <div className="w-3 h-3 rounded-full bg-red-500" />
           <div className="w-3 h-3 rounded-full bg-yellow-500" />
           <div className="w-3 h-3 rounded-full bg-green-500" />
-          <span className="ml-3 text-slate-400 text-sm">solution.py</span>
+          <div className="ml-3 flex items-center gap-2">
+            <LanguageIcon language={language} className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-400 text-sm">{fileName}</span>
+          </div>
           {readOnly && (
             <span className="ml-auto px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs font-medium rounded">
               READ ONLY
@@ -303,22 +440,31 @@ function CodeEditor({ code, onChange, placeholder, readOnly = false }) {
           )}
         </div>
       </div>
-      <div className={`flex-1 rounded-b-lg overflow-hidden ${readOnly ? 'bg-slate-800' : 'bg-slate-900'}`}>
-        <textarea
+      <div className={`flex-1 rounded-b-lg overflow-hidden ${readOnly ? 'bg-slate-800' : 'bg-[#1E293B]'}`}>
+        <Editor
+          height="100%"
+          language={monacoLanguage}
           value={code}
-          onChange={(e) => !readOnly && onChange(e.target.value)}
-          placeholder={placeholder}
-          readOnly={readOnly}
-          className={`
-            code-editor w-full h-full bg-transparent font-mono text-sm p-4 resize-none focus:outline-none
-            ${readOnly
-              ? 'text-slate-400 cursor-not-allowed'
-              : 'text-green-400 focus:ring-2 focus:ring-blue-500 focus:ring-inset'
-            }
-          `}
-          spellCheck="false"
-          autoCapitalize="off"
-          autoCorrect="off"
+          onChange={(value) => !readOnly && onChange(value || '')}
+          onMount={handleEditorDidMount}
+          theme="vs-dark"
+          options={{
+            ...editorOptions,
+            readOnly,
+            domReadOnly: readOnly,
+            cursorStyle: readOnly ? 'underline-thin' : 'line',
+          }}
+          loading={
+            <div className="flex items-center justify-center h-full bg-slate-900">
+              <div className="flex items-center gap-3 text-slate-400">
+                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span>Loading editor...</span>
+              </div>
+            </div>
+          }
         />
       </div>
     </div>
@@ -3395,6 +3541,9 @@ function RightPanel({
   isReviewMode,
   currentStepIndex,
   returnToCurrentStep,
+  selectedLanguage,
+  supportedLanguages,
+  onLanguageChange,
 }) {
   return (
     <div className="h-full flex flex-col bg-slate-800 p-6">
@@ -3416,17 +3565,25 @@ function RightPanel({
         </div>
       )}
 
-      {/* Editor header */}
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-white mb-1">
-          {isReviewMode ? 'Your Completed Solution' : 'Your Solution'}
-        </h2>
-        <p className="text-slate-400 text-sm">
-          {isReviewMode
-            ? `This is the code you wrote for Step ${viewingStep.stepId}`
-            : `Write your code below to complete Step ${viewingStep.stepId}`
-          }
-        </p>
+      {/* Editor header with language selector */}
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-white mb-1">
+            {isReviewMode ? 'Your Completed Solution' : 'Your Solution'}
+          </h2>
+          <p className="text-slate-400 text-sm">
+            {isReviewMode
+              ? `This is the code you wrote for Step ${viewingStep.stepId}`
+              : `Write your code below to complete Step ${viewingStep.stepId}`
+            }
+          </p>
+        </div>
+        <LanguageSelector
+          selectedLanguage={selectedLanguage}
+          supportedLanguages={supportedLanguages}
+          onLanguageChange={onLanguageChange}
+          disabled={isReviewMode}
+        />
       </div>
 
       {/* Code editor */}
@@ -3434,7 +3591,7 @@ function RightPanel({
         <CodeEditor
           code={userCode}
           onChange={updateCode}
-          placeholder={viewingStep.placeholderCode}
+          language={selectedLanguage}
           readOnly={isReviewMode}
         />
       </div>
@@ -3539,6 +3696,10 @@ function App() {
     totalSteps,
     isLastStep,
     progress,
+    // Language state
+    selectedLanguage,
+    supportedLanguages,
+    changeLanguage,
     // Coding actions
     updateCode,
     revealNextHint,
@@ -3722,6 +3883,9 @@ function App() {
             isReviewMode={isReviewMode}
             currentStepIndex={currentStepIndex}
             returnToCurrentStep={returnToCurrentStep}
+            selectedLanguage={selectedLanguage}
+            supportedLanguages={supportedLanguages}
+            onLanguageChange={changeLanguage}
           />
         </div>
       </div>

@@ -912,13 +912,25 @@ export const sampleProblem = {
     ]
   },
 
+  // Supported languages for this problem
+  supportedLanguages: ['python', 'javascript', 'java'],
+  defaultLanguage: 'python',
+
   steps: [
     {
       stepId: 1,
       instruction: "First, we need to initialize our pointers. Create a 'slow' pointer and a 'fast' pointer, both pointing to the head. This is the foundation of Floyd's Tortoise and Hare algorithm.",
-      placeholderCode: "# Initialize your pointers here\nslow = \nfast = ",
+      placeholderCode: {
+        python: "# Initialize your pointers here\nslow = \nfast = ",
+        javascript: "// Initialize your pointers here\nlet slow = \nlet fast = ",
+        java: "// Initialize your pointers here\nListNode slow = \nListNode fast = "
+      },
       validationType: "regex",
-      validationRule: "(slow\\s*=\\s*head).*(fast\\s*=\\s*head)|(fast\\s*=\\s*head).*(slow\\s*=\\s*head)",
+      validationRule: {
+        python: "(slow\\s*=\\s*head).*(fast\\s*=\\s*head)|(fast\\s*=\\s*head).*(slow\\s*=\\s*head)",
+        javascript: "(slow\\s*=\\s*head).*(fast\\s*=\\s*head)|(fast\\s*=\\s*head).*(slow\\s*=\\s*head)",
+        java: "(slow\\s*=\\s*head).*(fast\\s*=\\s*head)|(fast\\s*=\\s*head).*(slow\\s*=\\s*head)"
+      },
       hints: [
         "Think about the Tortoise and Hare algorithm.",
         "Both pointers should start at the same position - the head of the linked list.",
@@ -927,22 +939,38 @@ export const sampleProblem = {
     },
     {
       stepId: 2,
-      instruction: "Now, create a while loop. It should run as long as 'fast' and 'fast.next' are not None. This ensures we don't get a null pointer error when moving the fast pointer.",
-      placeholderCode: "while ... :\n    # Loop body will go here",
+      instruction: "Now, create a while loop. It should run as long as 'fast' and 'fast.next' are not null. This ensures we don't get a null pointer error when moving the fast pointer.",
+      placeholderCode: {
+        python: "while ... :\n    # Loop body will go here",
+        javascript: "while (...) {\n    // Loop body will go here\n}",
+        java: "while (...) {\n    // Loop body will go here\n}"
+      },
       validationType: "regex",
-      validationRule: "while\\s+fast\\s+(and|&&)\\s+fast\\.next",
+      validationRule: {
+        python: "while\\s+fast\\s+(and|&&)\\s+fast\\.next",
+        javascript: "while\\s*\\(\\s*fast\\s*(&&|\\&\\&)\\s*fast\\.next\\s*\\)",
+        java: "while\\s*\\(\\s*fast\\s*!=\\s*null\\s*(&&|\\&\\&)\\s*fast\\.next\\s*!=\\s*null\\s*\\)"
+      },
       hints: [
         "We need to make sure the fast pointer doesn't run off the end of the list.",
-        "Check both 'fast' and 'fast.next' are not None.",
-        "Use 'and' to combine the two conditions."
+        "Check both 'fast' and 'fast.next' are not null.",
+        "Python: use 'and'. JavaScript/Java: use '&&'"
       ]
     },
     {
       stepId: 3,
       instruction: "Inside the loop, move the slow pointer by one step and the fast pointer by two steps. This is the key to detecting cycles - if there's a cycle, the fast pointer will eventually catch up to the slow pointer.",
-      placeholderCode: "# Move the pointers\nslow = \nfast = ",
+      placeholderCode: {
+        python: "# Move the pointers\nslow = \nfast = ",
+        javascript: "// Move the pointers\nslow = \nfast = ",
+        java: "// Move the pointers\nslow = \nfast = "
+      },
       validationType: "regex",
-      validationRule: "(slow\\s*=\\s*slow\\.next).*(fast\\s*=\\s*fast\\.next\\.next)|(fast\\s*=\\s*fast\\.next\\.next).*(slow\\s*=\\s*slow\\.next)",
+      validationRule: {
+        python: "(slow\\s*=\\s*slow\\.next).*(fast\\s*=\\s*fast\\.next\\.next)|(fast\\s*=\\s*fast\\.next\\.next).*(slow\\s*=\\s*slow\\.next)",
+        javascript: "(slow\\s*=\\s*slow\\.next).*(fast\\s*=\\s*fast\\.next\\.next)|(fast\\s*=\\s*fast\\.next\\.next).*(slow\\s*=\\s*slow\\.next)",
+        java: "(slow\\s*=\\s*slow\\.next).*(fast\\s*=\\s*fast\\.next\\.next)|(fast\\s*=\\s*fast\\.next\\.next).*(slow\\s*=\\s*slow\\.next)"
+      },
       hints: [
         "The slow pointer moves one node at a time: slow = slow.next",
         "The fast pointer moves two nodes at a time: fast = fast.next.next",
@@ -951,26 +979,42 @@ export const sampleProblem = {
     },
     {
       stepId: 4,
-      instruction: "After moving the pointers, check if they meet. If slow equals fast, we've detected a cycle! Return True in this case.",
-      placeholderCode: "# Check for cycle\nif ...:\n    return True",
+      instruction: "After moving the pointers, check if they meet. If slow equals fast, we've detected a cycle! Return true in this case.",
+      placeholderCode: {
+        python: "# Check for cycle\nif ...:\n    return True",
+        javascript: "// Check for cycle\nif (...) {\n    return true;\n}",
+        java: "// Check for cycle\nif (...) {\n    return true;\n}"
+      },
       validationType: "regex",
-      validationRule: "if\\s+slow\\s*(==|is)\\s*fast",
+      validationRule: {
+        python: "if\\s+slow\\s*(==|is)\\s*fast",
+        javascript: "if\\s*\\(\\s*slow\\s*(===|==)\\s*fast\\s*\\)",
+        java: "if\\s*\\(\\s*slow\\s*==\\s*fast\\s*\\)"
+      },
       hints: [
-        "Compare the two pointers using '==' or 'is'.",
+        "Compare the two pointers for equality.",
         "If they point to the same node, we found a cycle.",
         "This check should be inside the while loop."
       ]
     },
     {
       stepId: 5,
-      instruction: "Finally, if the loop completes without finding a cycle (fast reaches the end), return False. This means the linked list has no cycle.",
-      placeholderCode: "# No cycle found\nreturn ...",
+      instruction: "Finally, if the loop completes without finding a cycle (fast reaches the end), return false. This means the linked list has no cycle.",
+      placeholderCode: {
+        python: "# No cycle found\nreturn ...",
+        javascript: "// No cycle found\nreturn ...",
+        java: "// No cycle found\nreturn ..."
+      },
       validationType: "regex",
-      validationRule: "return\\s+False",
+      validationRule: {
+        python: "return\\s+False",
+        javascript: "return\\s+false",
+        java: "return\\s+false"
+      },
       hints: [
         "If we exit the while loop, it means fast reached the end.",
-        "A list that ends (has a None) cannot have a cycle.",
-        "Simply return False."
+        "A list that ends (has a null) cannot have a cycle.",
+        "Return false."
       ]
     }
   ]

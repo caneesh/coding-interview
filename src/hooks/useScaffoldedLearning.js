@@ -26,17 +26,53 @@ export function useScaffoldedLearning(problem) {
   const [strategyValidation, setStrategyValidation] = useState(null);
   const [strategyHintLevel, setStrategyHintLevel] = useState(0);
 
+  // Language selection state
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    problem.defaultLanguage || 'python'
+  );
+  const supportedLanguages = problem.supportedLanguages || ['python'];
+
+  // Helper to get placeholder code for current language
+  const getPlaceholderCode = useCallback((step, language) => {
+    if (!step) return '';
+    const placeholder = step.placeholderCode;
+    // Support both old string format and new object format
+    if (typeof placeholder === 'string') return placeholder;
+    return placeholder?.[language] || placeholder?.python || '';
+  }, []);
+
+  // Helper to get validation rule for current language
+  const getValidationRule = useCallback((step, language) => {
+    if (!step) return '';
+    const rule = step.validationRule;
+    // Support both old string format and new object format
+    if (typeof rule === 'string') return rule;
+    return rule?.[language] || rule?.python || '';
+  }, []);
+
   // Current step index (0-based) - represents actual progress
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   // Viewing step index - which step is currently being viewed (can differ from currentStepIndex in review mode)
   const [viewingStepIndex, setViewingStepIndex] = useState(0);
 
-  // User's code input for each step (keyed by stepId)
+  // User's code input for each step (keyed by stepId and language)
+  // Format: { stepId: { python: 'code', javascript: 'code', java: 'code' } }
   const [userCodeByStep, setUserCodeByStep] = useState(() => {
     const initial = {};
+    const defaultLang = problem.defaultLanguage || 'python';
+    const langs = problem.supportedLanguages || ['python'];
+
     problem.steps.forEach(step => {
-      initial[step.stepId] = step.placeholderCode || '';
+      initial[step.stepId] = {};
+      langs.forEach(lang => {
+        const placeholder = step.placeholderCode;
+        if (typeof placeholder === 'string') {
+          initial[step.stepId][lang] = placeholder;
+        } else {
+          initial[step.stepId][lang] = placeholder?.[lang] || placeholder?.python || '';
+        }
+      });
     });
     return initial;
   });
@@ -76,16 +112,16 @@ export function useScaffoldedLearning(problem) {
   // Review mode: viewing a completed step that isn't the current active step
   const isReviewMode = viewingStepIndex < currentStepIndex;
 
-  // Code for the step being viewed
+  // Code for the step being viewed (in selected language)
   const userCode = useMemo(() =>
-    userCodeByStep[viewingStep?.stepId] || '',
-    [userCodeByStep, viewingStep]
+    userCodeByStep[viewingStep?.stepId]?.[selectedLanguage] || '',
+    [userCodeByStep, viewingStep, selectedLanguage]
   );
 
   // Code for the current active step (used when returning from review)
   const activeStepCode = useMemo(() =>
-    userCodeByStep[currentStep?.stepId] || '',
-    [userCodeByStep, currentStep]
+    userCodeByStep[currentStep?.stepId]?.[selectedLanguage] || '',
+    [userCodeByStep, currentStep, selectedLanguage]
   );
 
   const totalSteps = problem.steps.length;
@@ -285,7 +321,10 @@ export function useScaffoldedLearning(problem) {
 
     setUserCodeByStep(prev => ({
       ...prev,
-      [currentStep.stepId]: newCode
+      [currentStep.stepId]: {
+        ...prev[currentStep.stepId],
+        [selectedLanguage]: newCode
+      }
     }));
 
     // Clear validation message when user types
@@ -293,7 +332,17 @@ export function useScaffoldedLearning(problem) {
       setValidationMessage(null);
       setIsValidationError(false);
     }
-  }, [currentStep, validationMessage, isReviewMode]);
+  }, [currentStep, validationMessage, isReviewMode, selectedLanguage]);
+
+  // Change language and preserve code for each language separately
+  const changeLanguage = useCallback((newLanguage) => {
+    if (supportedLanguages.includes(newLanguage)) {
+      setSelectedLanguage(newLanguage);
+      // Clear validation message when switching languages
+      setValidationMessage(null);
+      setIsValidationError(false);
+    }
+  }, [supportedLanguages]);
 
   // Derived hint state (based on viewing step)
   const maxHints = viewingStep?.hints?.length || 0;
@@ -318,8 +367,10 @@ export function useScaffoldedLearning(problem) {
   const validateStep = useCallback(() => {
     if (!currentStep) return false;
 
-    const { validationType, validationRule } = currentStep;
+    const { validationType } = currentStep;
     const code = userCode;
+    // Get language-specific validation rule
+    const validationRule = getValidationRule(currentStep, selectedLanguage);
 
     if (validationType === 'regex') {
       try {
@@ -334,7 +385,7 @@ export function useScaffoldedLearning(problem) {
 
     // Add more validation types here as needed
     return false;
-  }, [currentStep, userCode]);
+  }, [currentStep, userCode, selectedLanguage, getValidationRule]);
 
   // Submit current step
   const submitStep = useCallback(() => {
@@ -478,6 +529,11 @@ export function useScaffoldedLearning(problem) {
     totalSteps,
     isLastStep,
     progress,
+
+    // Language state
+    selectedLanguage,
+    supportedLanguages,
+    changeLanguage,
 
     // Pattern selection actions
     selectPattern,
