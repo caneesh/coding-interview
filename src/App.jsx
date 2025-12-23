@@ -1992,6 +1992,269 @@ function ApproachIcon({ icon, className = "w-6 h-6" }) {
 }
 
 /**
+ * Pattern icon component for Step Zero
+ */
+function PatternIcon({ icon, className = 'w-6 h-6' }) {
+  const icons = {
+    window: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+      </svg>
+    ),
+    pointers: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M6.672 1.911a1 1 0 10-1.932.518l.259.966a1 1 0 001.932-.518l-.26-.966zM2.429 4.74a1 1 0 10-.517 1.932l.966.259a1 1 0 00.517-1.932l-.966-.26zm8.814-.569a1 1 0 00-1.415-1.414l-.707.707a1 1 0 101.414 1.415l.708-.708zm-7.072 7.072l.707-.707A1 1 0 003.465 9.12l-.708.707a1 1 0 001.415 1.415zm3.2-5.171a1 1 0 00-1.3 1.3l4 10a1 1 0 001.823.075l1.38-2.759 3.018 3.02a1 1 0 001.414-1.415l-3.019-3.02 2.76-1.379a1 1 0 00-.076-1.822l-10-4z" clipRule="evenodd" />
+      </svg>
+    ),
+    tree: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+      </svg>
+    ),
+    bolt: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+      </svg>
+    ),
+    table: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M5 4a3 3 0 00-3 3v6a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H5zm-1 9v-1h5v2H5a1 1 0 01-1-1zm7 1h4a1 1 0 001-1v-1h-5v2zm0-4h5V8h-5v2zM9 8H4v2h5V8z" clipRule="evenodd" />
+      </svg>
+    ),
+    search: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+      </svg>
+    )
+  };
+  return icons[icon] || icons.pointers;
+}
+
+/**
+ * Step Zero - Pattern Selector
+ * Users must identify the correct algorithmic pattern before accessing the editor
+ */
+function PatternSelector({
+  problem,
+  patternSelection,
+  selectedPattern,
+  patternSubmitted,
+  patternFeedback,
+  isPatternCorrect,
+  patternAttempts,
+  onSelectPattern,
+  onSubmit,
+  onRetry,
+  onProceed
+}) {
+  if (!patternSelection) return null;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-8">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-slate-800 to-blue-800 px-8 py-6 text-white">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Step Zero: Identify the Pattern</h1>
+              <p className="text-blue-200 text-sm">The editor is locked until you recognize the strategy</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Problem Context */}
+        <div className="px-8 py-6 border-b border-gray-100 bg-gray-50">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
+              {problem.difficulty}
+            </span>
+            <h2 className="font-semibold text-gray-900">{problem.title}</h2>
+          </div>
+          <p className="text-gray-600 text-sm mb-3">{problem.description}</p>
+          <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-2 rounded-lg text-sm">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <span>{patternSelection.instruction}</span>
+          </div>
+        </div>
+
+        {/* Question */}
+        <div className="px-8 py-6">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <p className="text-xl font-semibold text-gray-900">{patternSelection.prompt}</p>
+          </div>
+
+          {/* Options Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+            {patternSelection.options.map((option) => {
+              const isSelected = selectedPattern === option.id;
+              const showResult = patternSubmitted && isSelected;
+              const isCorrect = option.id === patternSelection.correctAnswer;
+
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => !patternSubmitted && onSelectPattern(option.id)}
+                  disabled={patternSubmitted}
+                  className={`
+                    p-4 rounded-xl border-2 text-left transition-all duration-200
+                    ${patternSubmitted
+                      ? isSelected
+                        ? isCorrect
+                          ? 'border-green-400 bg-green-50'
+                          : 'border-red-400 bg-red-50'
+                        : 'border-gray-200 bg-gray-50 opacity-50'
+                      : isSelected
+                        ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-200'
+                        : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
+                    }
+                  `}
+                >
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <div className={`
+                      w-12 h-12 rounded-lg flex items-center justify-center
+                      ${patternSubmitted && isSelected
+                        ? isCorrect
+                          ? 'bg-green-200 text-green-700'
+                          : 'bg-red-200 text-red-700'
+                        : isSelected
+                          ? 'bg-blue-200 text-blue-700'
+                          : 'bg-gray-100 text-gray-500'
+                      }
+                    `}>
+                      <PatternIcon icon={option.icon} />
+                    </div>
+                    <div>
+                      <span className={`font-semibold text-sm ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>
+                        {option.label}
+                      </span>
+                      {showResult && (
+                        <div className="mt-1">
+                          {isCorrect ? (
+                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">CORRECT</span>
+                          ) : (
+                            <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full">INCORRECT</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">{option.description}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Submit Button (before submission) */}
+          {!patternSubmitted && (
+            <button
+              onClick={onSubmit}
+              disabled={!selectedPattern}
+              className={`
+                w-full py-3 px-6 rounded-xl font-semibold text-lg transition-all duration-200
+                flex items-center justify-center gap-2
+                ${selectedPattern
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }
+              `}
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
+              </svg>
+              Check My Answer
+            </button>
+          )}
+
+          {/* Feedback (after submission) */}
+          {patternSubmitted && patternFeedback && (
+            <div className={`rounded-xl p-6 mb-4 ${isPatternCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+              <div className="flex items-start gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isPatternCorrect ? 'bg-green-200' : 'bg-red-200'}`}>
+                  {isPatternCorrect ? (
+                    <svg className="w-6 h-6 text-green-700" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg className="w-6 h-6 text-red-700" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className={`font-bold text-lg mb-2 ${isPatternCorrect ? 'text-green-800' : 'text-red-800'}`}>
+                    {patternFeedback.title}
+                  </h3>
+                  <p className={`mb-3 ${isPatternCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                    {patternFeedback.explanation}
+                  </p>
+                  {isPatternCorrect && patternFeedback.insight && (
+                    <div className="bg-green-100 rounded-lg p-3 text-green-800 text-sm">
+                      <span className="font-semibold">Key Insight:</span> {patternFeedback.insight}
+                    </div>
+                  )}
+                  {!isPatternCorrect && patternFeedback.hint && (
+                    <div className="bg-amber-100 rounded-lg p-3 text-amber-800 text-sm">
+                      <span className="font-semibold">Hint:</span> {patternFeedback.hint}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons (after submission) */}
+          {patternSubmitted && (
+            <div className="flex gap-3">
+              {isPatternCorrect ? (
+                <button
+                  onClick={onProceed}
+                  className="flex-1 py-3 px-6 rounded-xl font-semibold text-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 shadow-lg flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
+                  </svg>
+                  Unlock Editor & Continue
+                </button>
+              ) : (
+                <button
+                  onClick={onRetry}
+                  className="flex-1 py-3 px-6 rounded-xl font-semibold text-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-lg flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                  </svg>
+                  Try Again (Attempt {patternAttempts})
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Attempt Counter */}
+          {patternAttempts > 0 && !isPatternCorrect && (
+            <p className="text-center text-gray-500 text-sm mt-4">
+              Attempts: {patternAttempts} • Take your time to think about the problem constraints
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Interview Simulation - "What Would You Try First?" Mode
  * Forces users to think about approach before coding
  */
@@ -2575,6 +2838,20 @@ function RightPanel({
  */
 function App() {
   const {
+    // Pattern selection state (Step Zero)
+    hasPatternSelection,
+    isPatternComplete,
+    selectedPattern,
+    patternSubmitted,
+    patternFeedback,
+    isPatternCorrect,
+    patternAttempts,
+    patternSelection,
+    // Pattern selection actions
+    selectPattern,
+    submitPattern,
+    retryPattern,
+    proceedFromPattern,
     // Interview state
     hasInterviewQuestion,
     isInterviewComplete,
@@ -2637,6 +2914,25 @@ function App() {
         totalSteps={totalSteps}
         totalHintsUsed={totalHintsUsed}
         onReset={resetProblem}
+      />
+    );
+  }
+
+  // Step Zero: Show pattern selector first (editor is locked until correct)
+  if (hasPatternSelection && !isPatternComplete) {
+    return (
+      <PatternSelector
+        problem={sampleProblem}
+        patternSelection={patternSelection}
+        selectedPattern={selectedPattern}
+        patternSubmitted={patternSubmitted}
+        patternFeedback={patternFeedback}
+        isPatternCorrect={isPatternCorrect}
+        patternAttempts={patternAttempts}
+        onSelectPattern={selectPattern}
+        onSubmit={submitPattern}
+        onRetry={retryPattern}
+        onProceed={proceedFromPattern}
       />
     );
   }

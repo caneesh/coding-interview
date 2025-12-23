@@ -8,6 +8,12 @@ import { useState, useCallback, useMemo } from 'react';
  * @returns {Object} State and handlers for the scaffolded learning component
  */
 export function useScaffoldedLearning(problem) {
+  // Step Zero - Pattern selection state (must complete before interview)
+  const [isPatternComplete, setIsPatternComplete] = useState(false);
+  const [selectedPattern, setSelectedPattern] = useState(null);
+  const [patternSubmitted, setPatternSubmitted] = useState(false);
+  const [patternAttempts, setPatternAttempts] = useState(0);
+
   // Interview simulation state - must complete before coding
   const [isInterviewComplete, setIsInterviewComplete] = useState(false);
   const [selectedApproach, setSelectedApproach] = useState(null);
@@ -85,6 +91,26 @@ export function useScaffoldedLearning(problem) {
     [hintsUsedByStep]
   );
 
+  // Pattern selection derived state
+  const patternSelection = problem.patternSelection;
+  const hasPatternSelection = !!patternSelection;
+
+  // Get the pattern feedback based on selection
+  const patternFeedback = useMemo(() => {
+    if (!selectedPattern || !patternSelection) return null;
+    const isCorrect = selectedPattern === patternSelection.correctAnswer;
+    if (isCorrect) {
+      return patternSelection.feedback.correct;
+    }
+    return patternSelection.feedback.incorrect[selectedPattern] || null;
+  }, [selectedPattern, patternSelection]);
+
+  // Check if selected pattern is correct
+  const isPatternCorrect = useMemo(() => {
+    if (!selectedPattern || !patternSelection) return false;
+    return selectedPattern === patternSelection.correctAnswer;
+  }, [selectedPattern, patternSelection]);
+
   // Interview question derived state
   const interviewQuestion = problem.interviewQuestion;
   const hasInterviewQuestion = !!interviewQuestion;
@@ -108,6 +134,32 @@ export function useScaffoldedLearning(problem) {
     const option = interviewQuestion.options.find(opt => opt.id === selectedApproach);
     return option?.isPartiallyCorrect || false;
   }, [selectedApproach, interviewQuestion]);
+
+  // Select a pattern (Step Zero - before submitting)
+  const selectPattern = useCallback((patternId) => {
+    if (!patternSubmitted) {
+      setSelectedPattern(patternId);
+    }
+  }, [patternSubmitted]);
+
+  // Submit pattern selection
+  const submitPattern = useCallback(() => {
+    if (selectedPattern && patternSelection) {
+      setPatternSubmitted(true);
+      setPatternAttempts(prev => prev + 1);
+    }
+  }, [selectedPattern, patternSelection]);
+
+  // Try again after wrong pattern (reset for another attempt)
+  const retryPattern = useCallback(() => {
+    setSelectedPattern(null);
+    setPatternSubmitted(false);
+  }, []);
+
+  // Proceed to interview/coding after correct pattern
+  const proceedFromPattern = useCallback(() => {
+    setIsPatternComplete(true);
+  }, []);
 
   // Select an approach (before submitting)
   const selectApproach = useCallback((approachId) => {
@@ -237,6 +289,12 @@ export function useScaffoldedLearning(problem) {
 
   // Reset the entire problem
   const resetProblem = useCallback(() => {
+    // Reset pattern selection state
+    setIsPatternComplete(false);
+    setSelectedPattern(null);
+    setPatternSubmitted(false);
+    setPatternAttempts(0);
+
     // Reset interview state
     setIsInterviewComplete(false);
     setSelectedApproach(null);
@@ -266,6 +324,16 @@ export function useScaffoldedLearning(problem) {
   }, [problem.steps]);
 
   return {
+    // Pattern selection state (Step Zero)
+    hasPatternSelection,
+    isPatternComplete,
+    selectedPattern,
+    patternSubmitted,
+    patternFeedback,
+    isPatternCorrect,
+    patternAttempts,
+    patternSelection,
+
     // Interview state
     hasInterviewQuestion,
     isInterviewComplete,
@@ -293,6 +361,12 @@ export function useScaffoldedLearning(problem) {
     totalSteps,
     isLastStep,
     progress,
+
+    // Pattern selection actions
+    selectPattern,
+    submitPattern,
+    retryPattern,
+    proceedFromPattern,
 
     // Interview actions
     selectApproach,

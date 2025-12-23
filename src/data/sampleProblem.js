@@ -9,6 +9,91 @@ export const sampleProblem = {
   difficulty: "Medium",
   description: "Given a linked list, determine if it has a cycle in it. A cycle occurs when a node's next pointer points back to a previous node, creating a loop.",
 
+  // Step Zero - Pattern Selection (must identify pattern before coding)
+  patternSelection: {
+    prompt: "Which algorithmic strategy is best for this problem?",
+    instruction: "Before writing any code, identify the optimal pattern. This trains you to recognize problem types in interviews.",
+    options: [
+      {
+        id: 'sliding-window',
+        label: 'Sliding Window',
+        icon: 'window',
+        description: 'Maintain a window over sequential data'
+      },
+      {
+        id: 'two-pointers',
+        label: 'Two Pointers',
+        icon: 'pointers',
+        description: 'Use two references moving through data'
+      },
+      {
+        id: 'dfs',
+        label: 'Depth First Search',
+        icon: 'tree',
+        description: 'Explore paths deeply before backtracking'
+      },
+      {
+        id: 'greedy',
+        label: 'Greedy',
+        icon: 'bolt',
+        description: 'Make locally optimal choices at each step'
+      },
+      {
+        id: 'dynamic-programming',
+        label: 'Dynamic Programming',
+        icon: 'table',
+        description: 'Break into overlapping subproblems'
+      },
+      {
+        id: 'binary-search',
+        label: 'Binary Search',
+        icon: 'search',
+        description: 'Divide and conquer on sorted data'
+      }
+    ],
+    correctAnswer: 'two-pointers',
+    feedback: {
+      correct: {
+        title: "Excellent! Two Pointers is optimal here.",
+        explanation: "Because the linked list is a linear structure and we need to detect if paths converge (cycle), Two Pointers at different speeds will meet if there's a cycle. This gives O(n) time with O(1) space.",
+        insight: "Key insight: In a cycle, a faster pointer will eventually 'lap' a slower one - like two runners on a circular track."
+      },
+      incorrect: {
+        'sliding-window': {
+          title: "Not quite - Sliding Window is for contiguous subarrays",
+          explanation: "Sliding Window works on arrays where you need to find a subarray with certain properties (sum, distinct elements). Linked list cycle detection doesn't have a 'window' concept.",
+          hint: "Think about what property of a cycle you can exploit. If you keep walking in a cycle..."
+        },
+        'dfs': {
+          title: "DFS would work, but it's not optimal",
+          explanation: "You could use DFS with a visited set, but that requires O(n) extra space. There's a more elegant O(1) space solution.",
+          hint: "What happens if two things move at different speeds in a cycle? Think of runners on a track."
+        },
+        'greedy': {
+          title: "Greedy doesn't apply here",
+          explanation: "Greedy is for optimization problems where local choices lead to global optimum (like interval scheduling). Cycle detection is a yes/no decision problem.",
+          hint: "You're not optimizing anything - you're detecting a structural property. What if you had two observers walking at different speeds?"
+        },
+        'dynamic-programming': {
+          title: "DP is overkill for this problem",
+          explanation: "DP is for problems with overlapping subproblems and optimal substructure. There's no 'optimal' here - just detecting presence/absence of a cycle.",
+          hint: "This is simpler than DP. Think about what happens if you walk through a cycle repeatedly..."
+        },
+        'binary-search': {
+          title: "Binary Search requires sorted data",
+          explanation: "Binary Search needs a monotonic property to eliminate half the search space. A linked list isn't sorted, and cycle detection isn't a search problem.",
+          hint: "You're not searching for a value - you're checking for a structural loop. What if two things moved at different speeds?"
+        }
+      }
+    },
+    // Metadata for analytics
+    analytics: {
+      commonMistakes: ['dfs', 'sliding-window'],
+      difficulty: 'medium',
+      avgAttemptsToCorrect: 1.4
+    }
+  },
+
   // Interview Simulation - "What Would You Try First?"
   interviewQuestion: {
     prompt: "You are in an interview. The interviewer just gave you this problem. What is your first approach?",

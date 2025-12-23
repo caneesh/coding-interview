@@ -136,6 +136,61 @@ If you don't configure Supabase, the app works normally - it just makes fresh AP
 
 ---
 
+## User Progress Tracking (Optional)
+
+To track user learning progress, pattern selection attempts, and provide analytics, add these tables:
+
+### Schema for Pattern Selection Tracking
+```sql
+-- Track user pattern selection attempts (Step Zero)
+CREATE TABLE pattern_attempts (
+  id SERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  problem_id TEXT NOT NULL,
+  selected_pattern TEXT NOT NULL,
+  is_correct BOOLEAN NOT NULL,
+  attempt_number INTEGER DEFAULT 1,
+  time_spent_ms INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for user progress queries
+CREATE INDEX idx_pattern_attempts_user ON pattern_attempts(user_id, problem_id);
+CREATE INDEX idx_pattern_attempts_problem ON pattern_attempts(problem_id);
+
+-- Aggregate stats view
+CREATE VIEW pattern_stats AS
+SELECT
+  problem_id,
+  selected_pattern,
+  COUNT(*) as total_attempts,
+  SUM(CASE WHEN is_correct THEN 1 ELSE 0 END) as correct_count,
+  AVG(attempt_number) as avg_attempts_to_correct
+FROM pattern_attempts
+GROUP BY problem_id, selected_pattern;
+```
+
+### Analytics Queries
+```sql
+-- Most commonly confused patterns per problem
+SELECT problem_id, selected_pattern, COUNT(*) as wrong_picks
+FROM pattern_attempts
+WHERE is_correct = FALSE
+GROUP BY problem_id, selected_pattern
+ORDER BY wrong_picks DESC;
+
+-- User learning curve (attempts over time)
+SELECT
+  DATE(created_at) as date,
+  AVG(attempt_number) as avg_attempts
+FROM pattern_attempts
+WHERE is_correct = TRUE
+GROUP BY DATE(created_at)
+ORDER BY date;
+```
+
+---
+
 ## Local Development
 
 For local development without using your production API key:
