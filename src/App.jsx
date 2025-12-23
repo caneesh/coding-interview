@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Confetti from 'react-confetti';
 import { useScaffoldedLearning } from './hooks/useScaffoldedLearning';
 import { sampleProblem } from './data/sampleProblem';
+import { patternVault } from './data/patternVault';
 import {
   reviewCode,
   generateHint,
@@ -2031,6 +2032,382 @@ function PatternIcon({ icon, className = 'w-6 h-6' }) {
 }
 
 /**
+ * Pattern Vault - Curated knowledge base of algorithmic patterns
+ * Shows all patterns as cards with detailed drill-down views
+ */
+function PatternVault({ onClose }) {
+  const [selectedPatternId, setSelectedPatternId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter patterns based on search query
+  const filteredPatterns = patternVault.filter(pattern =>
+    pattern.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    pattern.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    pattern.whenToUse.some(use => use.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  // Get color classes for pattern cards
+  const getColorClasses = (color) => {
+    const colors = {
+      blue: { bg: 'bg-blue-500', light: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', gradient: 'from-blue-500 to-blue-600' },
+      teal: { bg: 'bg-teal-500', light: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200', gradient: 'from-teal-500 to-teal-600' },
+      orange: { bg: 'bg-orange-500', light: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', gradient: 'from-orange-500 to-orange-600' },
+      purple: { bg: 'bg-purple-500', light: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', gradient: 'from-purple-500 to-purple-600' },
+      red: { bg: 'bg-red-500', light: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', gradient: 'from-red-500 to-red-600' },
+      amber: { bg: 'bg-amber-500', light: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', gradient: 'from-amber-500 to-amber-600' },
+    };
+    return colors[color] || colors.blue;
+  };
+
+  // If a pattern is selected, show the detail view
+  if (selectedPatternId) {
+    const pattern = patternVault.find(p => p.id === selectedPatternId);
+    return (
+      <PatternDetail
+        pattern={pattern}
+        colorClasses={getColorClasses(pattern.color)}
+        onBack={() => setSelectedPatternId(null)}
+        onClose={onClose}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900">
+      {/* Header */}
+      <div className="bg-black/20 backdrop-blur-sm border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">The Pattern Vault</h1>
+                <p className="text-purple-200 text-sm">Master the building blocks of algorithm design</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              Close Vault
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="relative max-w-md">
+          <input
+            type="text"
+            placeholder="Search patterns..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-3 pl-12 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+          />
+          <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/50" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Pattern Cards Grid */}
+      <div className="max-w-7xl mx-auto px-6 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredPatterns.map((pattern) => {
+            const colors = getColorClasses(pattern.color);
+            return (
+              <button
+                key={pattern.id}
+                onClick={() => setSelectedPatternId(pattern.id)}
+                className="group bg-white rounded-2xl shadow-xl overflow-hidden text-left transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+              >
+                {/* Card Header with Gradient */}
+                <div className={`bg-gradient-to-r ${colors.gradient} p-6`}>
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+                      <PatternIcon icon={pattern.icon} className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">{pattern.name}</h3>
+                      <span className="text-white/80 text-sm">{pattern.difficulty}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Body */}
+                <div className="p-6">
+                  <p className="text-gray-600 mb-4 line-clamp-2">{pattern.description}</p>
+
+                  {/* Primitives Preview */}
+                  <div className="mb-4">
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Primitives</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {pattern.primitives.slice(0, 3).map((primitive, idx) => (
+                        <span
+                          key={idx}
+                          className={`px-2 py-1 ${colors.light} ${colors.text} text-xs font-medium rounded-lg`}
+                        >
+                          {primitive.name}
+                        </span>
+                      ))}
+                      {pattern.primitives.length > 3 && (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded-lg">
+                          +{pattern.primitives.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Complexity */}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">{pattern.complexity.time}</span>
+                    <span className={`${colors.text} font-medium group-hover:underline flex items-center gap-1`}>
+                      View Details
+                      <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Empty State */}
+        {filteredPatterns.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white/50" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-2">No patterns found</h3>
+            <p className="text-white/60">Try a different search term</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Pattern Detail View - Full detail view for a single pattern
+ */
+function PatternDetail({ pattern, colorClasses, onBack, onClose }) {
+  const [activeTab, setActiveTab] = useState('overview');
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className={`bg-gradient-to-r ${colorClasses.gradient}`}>
+        <div className="max-w-5xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={onBack}
+              className="flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+              </svg>
+              Back to Vault
+            </button>
+            <button
+              onClick={onClose}
+              className="flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              Close
+            </button>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center">
+              <PatternIcon icon={pattern.icon} className="w-12 h-12 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">{pattern.name}</h1>
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1 bg-white/20 text-white text-sm font-medium rounded-full">
+                  {pattern.difficulty}
+                </span>
+                <span className="text-white/80">{pattern.complexity.time}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="flex gap-1">
+            {['overview', 'code', 'problems'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-6 py-3 font-medium rounded-t-lg transition-colors ${
+                  activeTab === tab
+                    ? 'bg-gray-50 text-gray-900'
+                    : 'bg-white/10 text-white/80 hover:bg-white/20'
+                }`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        {activeTab === 'overview' && (
+          <div className="space-y-8">
+            {/* Description */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">What is it?</h2>
+              <p className="text-gray-600 leading-relaxed">{pattern.description}</p>
+              <div className={`mt-4 p-4 ${colorClasses.light} ${colorClasses.border} border rounded-lg`}>
+                <p className={`${colorClasses.text} font-medium`}>{pattern.keyInsight}</p>
+              </div>
+            </div>
+
+            {/* Primitives */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">The Primitives (Variables You Need)</h2>
+              <div className="grid gap-4">
+                {pattern.primitives.map((primitive, idx) => (
+                  <div key={idx} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div className={`px-3 py-1 ${colorClasses.light} ${colorClasses.text} font-mono text-sm font-bold rounded`}>
+                      {primitive.name}
+                    </div>
+                    <div>
+                      <span className="text-gray-500 text-sm">{primitive.type}</span>
+                      <p className="text-gray-700">{primitive.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* When to Use */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">When to Use This Pattern</h2>
+              <ul className="space-y-2">
+                {pattern.whenToUse.map((use, idx) => (
+                  <li key={idx} className="flex items-start gap-3">
+                    <svg className={`w-5 h-5 ${colorClasses.text} flex-shrink-0 mt-0.5`} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-gray-700">{use}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Variants */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Pattern Variants</h2>
+              <div className="grid gap-4">
+                {pattern.variants.map((variant, idx) => (
+                  <div key={idx} className={`p-4 border ${colorClasses.border} rounded-lg`}>
+                    <h3 className={`font-semibold ${colorClasses.text} mb-1`}>{variant.name}</h3>
+                    <p className="text-gray-600 text-sm mb-2">{variant.description}</p>
+                    <p className="text-gray-500 text-xs">Use case: {variant.useCase}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Common Mistakes */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Common Mistakes to Avoid</h2>
+              <ul className="space-y-2">
+                {pattern.commonMistakes.map((mistake, idx) => (
+                  <li key={idx} className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-gray-700">{mistake}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Complexity */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Complexity Analysis</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <span className="text-green-600 text-sm font-medium">Time Complexity</span>
+                  <p className="text-green-800 font-semibold">{pattern.complexity.time}</p>
+                </div>
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <span className="text-blue-600 text-sm font-medium">Space Complexity</span>
+                  <p className="text-blue-800 font-semibold">{pattern.complexity.space}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'code' && (
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 bg-gray-900">
+              <span className="text-gray-400 font-mono text-sm">{pattern.templateCode.language}</span>
+              <button
+                onClick={() => navigator.clipboard.writeText(pattern.templateCode.code)}
+                className="flex items-center gap-2 px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded text-sm transition-colors"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                  <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                </svg>
+                Copy Code
+              </button>
+            </div>
+            <pre className="p-6 bg-gray-900 text-gray-100 overflow-x-auto">
+              <code className="font-mono text-sm leading-relaxed whitespace-pre">{pattern.templateCode.code}</code>
+            </pre>
+          </div>
+        )}
+
+        {activeTab === 'problems' && (
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Practice Problems</h2>
+            <div className="grid gap-3">
+              {pattern.relatedProblems.map((problem, idx) => (
+                <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div>
+                    <h3 className="font-medium text-gray-900">{problem.title}</h3>
+                    <span className="text-gray-500 text-sm">{problem.pattern}</span>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    problem.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
+                    problem.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {problem.difficulty}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
  * Step Zero - Pattern Selector
  * Users must identify the correct algorithmic pattern before accessing the editor
  */
@@ -3171,6 +3548,9 @@ function App() {
     resetProblem,
   } = useScaffoldedLearning(sampleProblem);
 
+  // Pattern Vault state
+  const [showPatternVault, setShowPatternVault] = useState(false);
+
   // AI feature state
   const [showAISettings, setShowAISettings] = useState(false);
   const [showAIReview, setShowAIReview] = useState(false);
@@ -3196,6 +3576,15 @@ function App() {
         totalSteps={totalSteps}
         totalHintsUsed={totalHintsUsed}
         onReset={resetProblem}
+      />
+    );
+  }
+
+  // Show Pattern Vault when requested
+  if (showPatternVault) {
+    return (
+      <PatternVault
+        onClose={() => setShowPatternVault(false)}
       />
     );
   }
@@ -3271,15 +3660,26 @@ function App() {
             </div>
             <span className="text-xl font-bold text-gray-900">Scaffolded Learning</span>
           </div>
-          <button
-            onClick={resetProblem}
-            className="text-gray-500 hover:text-gray-700 text-sm font-medium flex items-center gap-1"
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-            </svg>
-            Reset
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowPatternVault(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all shadow-sm hover:shadow text-sm font-medium"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762z" />
+              </svg>
+              Pattern Vault
+            </button>
+            <button
+              onClick={resetProblem}
+              className="text-gray-500 hover:text-gray-700 text-sm font-medium flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+              </svg>
+              Reset
+            </button>
+          </div>
         </div>
       </nav>
 
