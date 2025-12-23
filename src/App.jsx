@@ -1,5 +1,33 @@
+import { useState, useEffect } from 'react';
+import Confetti from 'react-confetti';
 import { useScaffoldedLearning } from './hooks/useScaffoldedLearning';
 import { sampleProblem } from './data/sampleProblem';
+
+/**
+ * Custom hook to get window dimensions for confetti
+ */
+function useWindowSize() {
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0,
+  });
+
+  useEffect(() => {
+    function handleResize() {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    }
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return windowSize;
+}
 
 /**
  * Difficulty badge component
@@ -289,36 +317,125 @@ function CodeEditor({ code, onChange, placeholder, readOnly = false }) {
 }
 
 /**
- * Completion screen component
+ * Victory/Completion screen component with confetti celebration
  */
-function CompletionScreen({ problem, onReset }) {
+function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
+  const { width, height } = useWindowSize();
+  const [showConfetti, setShowConfetti] = useState(true);
+
+  // Stop confetti after 8 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => setShowConfetti(false), 8000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Calculate performance rating based on hints used
+  const getPerformanceRating = () => {
+    if (totalHintsUsed === 0) return { label: 'Perfect!', emoji: '🏆', color: 'text-yellow-500' };
+    if (totalHintsUsed <= 2) return { label: 'Excellent!', emoji: '🌟', color: 'text-green-500' };
+    if (totalHintsUsed <= 5) return { label: 'Great Job!', emoji: '👏', color: 'text-blue-500' };
+    return { label: 'Well Done!', emoji: '✅', color: 'text-gray-600' };
+  };
+
+  const rating = getPerformanceRating();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-8">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-lg text-center">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg className="w-10 h-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-          </svg>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-8 relative overflow-hidden">
+      {/* Confetti Animation */}
+      {showConfetti && (
+        <Confetti
+          width={width}
+          height={height}
+          recycle={true}
+          numberOfPieces={300}
+          gravity={0.2}
+          colors={['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899']}
+        />
+      )}
+
+      {/* Success Card */}
+      <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-xl text-center relative z-10 animate-fadeIn">
+        {/* Trophy Icon */}
+        <div className="relative mb-8">
+          <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
+            <svg className="w-14 h-14 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+          </div>
+          {/* Decorative rings */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-32 h-32 border-4 border-yellow-200 rounded-full animate-ping opacity-30"></div>
+          </div>
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Problem Completed!
-        </h2>
-        <p className="text-gray-600 mb-6">
-          You successfully solved "{problem.title}"
+
+        {/* Headline */}
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          Problem Solved!
+        </h1>
+        <p className={`text-2xl font-semibold ${rating.color} mb-2`}>
+          {rating.emoji} {rating.label}
         </p>
-        <div className="bg-gray-50 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-gray-800 mb-2">What you learned:</h3>
-          <ul className="text-left text-gray-600 space-y-1">
-            <li>• Floyd's Tortoise and Hare algorithm</li>
-            <li>• Two-pointer technique</li>
-            <li>• Cycle detection in linked lists</li>
+        <p className="text-gray-600 mb-8">
+          You successfully completed "{problem.title}"
+        </p>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl p-4">
+            <div className="text-3xl font-bold text-green-600">{totalSteps}</div>
+            <div className="text-sm text-green-700 font-medium">Steps Completed</div>
+          </div>
+          <div className="bg-gradient-to-br from-amber-50 to-yellow-100 rounded-xl p-4">
+            <div className="text-3xl font-bold text-amber-600">{totalHintsUsed}</div>
+            <div className="text-sm text-amber-700 font-medium">Hints Used</div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-4">
+            <div className="text-3xl font-bold text-blue-600">
+              {totalHintsUsed === 0 ? '100' : Math.max(0, 100 - (totalHintsUsed * 10))}%
+            </div>
+            <div className="text-sm text-blue-700 font-medium">Score</div>
+          </div>
+        </div>
+
+        {/* What you learned */}
+        <div className="bg-gray-50 rounded-xl p-5 mb-8 text-left">
+          <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <svg className="w-5 h-5 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+            </svg>
+            What you learned:
+          </h3>
+          <ul className="text-gray-600 space-y-2">
+            <li className="flex items-start gap-2">
+              <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Floyd's Tortoise and Hare algorithm
+            </li>
+            <li className="flex items-start gap-2">
+              <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Two-pointer technique
+            </li>
+            <li className="flex items-start gap-2">
+              <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Cycle detection in linked lists
+            </li>
           </ul>
         </div>
+
+        {/* Restart Button */}
         <button
           onClick={onReset}
-          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          className="w-full py-4 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-lg rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
         >
-          Practice Again
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+          </svg>
+          Restart Problem
         </button>
       </div>
     </div>
@@ -522,6 +639,7 @@ function App() {
     isReviewMode,
     hintLevel,
     hasMoreHints,
+    totalHintsUsed,
     validationMessage,
     isValidationError,
     isCompleted,
@@ -538,7 +656,14 @@ function App() {
 
   // Show completion screen when problem is completed
   if (isCompleted) {
-    return <CompletionScreen problem={sampleProblem} onReset={resetProblem} />;
+    return (
+      <CompletionScreen
+        problem={sampleProblem}
+        totalSteps={totalSteps}
+        totalHintsUsed={totalHintsUsed}
+        onReset={resetProblem}
+      />
+    );
   }
 
   return (

@@ -27,6 +27,15 @@ export function useScaffoldedLearning(problem) {
   // 0 = No hints shown, 1 = First hint shown, 2 = Second hint shown, etc.
   const [hintLevel, setHintLevel] = useState(0);
 
+  // Track hints used per step (for victory stats)
+  const [hintsUsedByStep, setHintsUsedByStep] = useState(() => {
+    const initial = {};
+    problem.steps.forEach(step => {
+      initial[step.stepId] = 0;
+    });
+    return initial;
+  });
+
   // Validation feedback
   const [validationMessage, setValidationMessage] = useState(null);
   const [isValidationError, setIsValidationError] = useState(false);
@@ -65,6 +74,12 @@ export function useScaffoldedLearning(problem) {
   const isLastStep = currentStepIndex === totalSteps - 1;
   const progress = ((currentStepIndex + (isCompleted ? 1 : 0)) / totalSteps) * 100;
 
+  // Calculate total hints used across all steps
+  const totalHintsUsed = useMemo(() =>
+    Object.values(hintsUsedByStep).reduce((sum, count) => sum + count, 0),
+    [hintsUsedByStep]
+  );
+
   // Update code for current step (only when not in review mode)
   const updateCode = useCallback((newCode) => {
     if (!currentStep || isReviewMode) return;
@@ -85,13 +100,18 @@ export function useScaffoldedLearning(problem) {
   const maxHints = viewingStep?.hints?.length || 0;
   const hasMoreHints = hintLevel < maxHints;
 
-  // Reveal next hint (increments hint level)
+  // Reveal next hint (increments hint level and tracks usage)
   const revealNextHint = useCallback(() => {
     if (!currentStep) return;
 
     const maxHints = currentStep.hints?.length || 0;
     if (hintLevel < maxHints) {
       setHintLevel(prev => prev + 1);
+      // Track hint usage for this step
+      setHintsUsedByStep(prev => ({
+        ...prev,
+        [currentStep.stepId]: Math.max(prev[currentStep.stepId] || 0, hintLevel + 1)
+      }));
     }
   }, [currentStep, hintLevel]);
 
@@ -179,6 +199,13 @@ export function useScaffoldedLearning(problem) {
       return initial;
     });
     setHintLevel(0); // Reset hint level
+    setHintsUsedByStep(() => {
+      const initial = {};
+      problem.steps.forEach(step => {
+        initial[step.stepId] = 0;
+      });
+      return initial;
+    }); // Reset hints tracking
     setValidationMessage(null);
     setIsValidationError(false);
     setIsCompleted(false);
@@ -195,6 +222,7 @@ export function useScaffoldedLearning(problem) {
     hintLevel,
     maxHints,
     hasMoreHints,
+    totalHintsUsed,
     validationMessage,
     isValidationError,
     isCompleted,
