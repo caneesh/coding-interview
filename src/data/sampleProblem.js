@@ -9,6 +9,109 @@ export const sampleProblem = {
   difficulty: "Medium",
   description: "Given a linked list, determine if it has a cycle in it. A cycle occurs when a node's next pointer points back to a previous node, creating a loop.",
 
+  // Interview Simulation - "What Would You Try First?"
+  interviewQuestion: {
+    prompt: "You are in an interview. The interviewer just gave you this problem. What is your first approach?",
+    hint: "Think about the constraints: O(1) space is ideal, and we need to detect if we've seen a node before.",
+    options: [
+      {
+        id: 'brute-force',
+        label: 'Brute Force',
+        description: 'Check every node against every other node',
+        icon: 'brute',
+        isCorrect: false,
+        feedback: {
+          title: "Not optimal for this problem",
+          explanation: "Brute force would mean for each node, checking if we've seen it before by traversing from the head again. This gives O(n²) time complexity.",
+          whyNot: "While it works, interviewers expect you to recognize this is inefficient. It doesn't leverage the structure of the problem.",
+          betterApproach: "Think about what makes a cycle special - if you keep walking, you'll eventually return to where you started..."
+        }
+      },
+      {
+        id: 'hash-set',
+        label: 'Hash Set',
+        description: 'Store visited nodes in a set',
+        icon: 'hash',
+        isCorrect: false,
+        isPartiallyCorrect: true,
+        feedback: {
+          title: "Good thinking, but not optimal!",
+          explanation: "Using a hash set to track visited nodes is a valid O(n) time solution. You'd store each node's reference and check if you've seen it before.",
+          whyNot: "This works and many interviewers would accept it as a first answer. However, it uses O(n) extra space.",
+          betterApproach: "The follow-up question will be: 'Can you do it in O(1) space?' That's where Two Pointers shines.",
+          partialCredit: "You'd likely get partial credit for this - it shows good problem-solving instinct!"
+        }
+      },
+      {
+        id: 'two-pointers',
+        label: 'Two Pointers',
+        description: 'Use slow and fast pointers',
+        icon: 'pointers',
+        isCorrect: true,
+        feedback: {
+          title: "Excellent choice! This is optimal.",
+          explanation: "Floyd's Cycle Detection (Tortoise and Hare) uses two pointers moving at different speeds. If there's a cycle, the fast pointer will eventually 'lap' the slow pointer.",
+          whyYes: "This achieves O(n) time AND O(1) space - the best possible complexity for this problem.",
+          interviewTip: "In an interview, you might first mention the hash set approach, then optimize to two pointers. This shows your thought process!"
+        }
+      },
+      {
+        id: 'sorting',
+        label: 'Sorting',
+        description: 'Sort the nodes somehow',
+        icon: 'sort',
+        isCorrect: false,
+        feedback: {
+          title: "This won't work here",
+          explanation: "Sorting requires either values to compare or the ability to rearrange elements. In a linked list cycle problem, we can't meaningfully sort nodes.",
+          whyNot: "Linked list nodes don't have a natural ordering for cycle detection. We're looking for structural repetition, not value-based patterns.",
+          betterApproach: "Ask yourself: 'What property of a cycle can I exploit?' Hint: In a cycle, you keep visiting the same nodes..."
+        }
+      },
+      {
+        id: 'recursion',
+        label: 'Recursion / DFS',
+        description: 'Recursively traverse the list',
+        icon: 'recursion',
+        isCorrect: false,
+        feedback: {
+          title: "Risky for this problem",
+          explanation: "While you could use recursion to traverse, it doesn't inherently solve cycle detection. You'd still need a way to track visited nodes.",
+          whyNot: "Recursion on a linked list with a cycle would cause infinite recursion (stack overflow) unless you track visited nodes - which brings you back to O(n) space.",
+          betterApproach: "Recursion is powerful for trees and graphs with clear termination. For cycles, think about what property lets you detect repetition without storing history."
+        }
+      },
+      {
+        id: 'dp',
+        label: 'Dynamic Programming',
+        description: 'Build up a solution from subproblems',
+        icon: 'dp',
+        isCorrect: false,
+        feedback: {
+          title: "Not applicable here",
+          explanation: "DP is for optimization problems with overlapping subproblems and optimal substructure. Cycle detection is a yes/no decision problem.",
+          whyNot: "There's no 'optimal' solution to build up - we just need to detect presence/absence of a cycle. No subproblem structure exists.",
+          betterApproach: "When you see 'detect' or 'find if exists', think traversal patterns rather than DP. What happens if you walk through a cycle?"
+        }
+      }
+    ],
+    correctAnswer: 'two-pointers',
+    acceptableAnswers: ['two-pointers', 'hash-set'], // Hash set gets partial credit
+    interviewContext: {
+      whatInterviewerWants: "The interviewer wants to see if you can identify the optimal pattern quickly. Mentioning hash set first, then optimizing to two pointers, shows strong problem-solving.",
+      commonMistakes: [
+        "Jumping straight to code without discussing approach",
+        "Not considering space complexity",
+        "Missing the 'different speeds' insight for two pointers"
+      ],
+      followUpQuestions: [
+        "Can you do it in O(1) space?",
+        "What if you needed to find WHERE the cycle starts?",
+        "How would you prove the two pointers will meet?"
+      ]
+    }
+  },
+
   // Concept tagging for pattern recognition training
   concepts: [
     {

@@ -8,6 +8,11 @@ import { useState, useCallback, useMemo } from 'react';
  * @returns {Object} State and handlers for the scaffolded learning component
  */
 export function useScaffoldedLearning(problem) {
+  // Interview simulation state - must complete before coding
+  const [isInterviewComplete, setIsInterviewComplete] = useState(false);
+  const [selectedApproach, setSelectedApproach] = useState(null);
+  const [interviewSubmitted, setInterviewSubmitted] = useState(false);
+
   // Current step index (0-based) - represents actual progress
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
@@ -79,6 +84,49 @@ export function useScaffoldedLearning(problem) {
     Object.values(hintsUsedByStep).reduce((sum, count) => sum + count, 0),
     [hintsUsedByStep]
   );
+
+  // Interview question derived state
+  const interviewQuestion = problem.interviewQuestion;
+  const hasInterviewQuestion = !!interviewQuestion;
+
+  // Get the selected option's feedback
+  const interviewFeedback = useMemo(() => {
+    if (!selectedApproach || !interviewQuestion) return null;
+    const option = interviewQuestion.options.find(opt => opt.id === selectedApproach);
+    return option ? option.feedback : null;
+  }, [selectedApproach, interviewQuestion]);
+
+  // Check if selected approach is correct or partially correct
+  const isInterviewCorrect = useMemo(() => {
+    if (!selectedApproach || !interviewQuestion) return false;
+    const option = interviewQuestion.options.find(opt => opt.id === selectedApproach);
+    return option?.isCorrect || false;
+  }, [selectedApproach, interviewQuestion]);
+
+  const isInterviewPartiallyCorrect = useMemo(() => {
+    if (!selectedApproach || !interviewQuestion) return false;
+    const option = interviewQuestion.options.find(opt => opt.id === selectedApproach);
+    return option?.isPartiallyCorrect || false;
+  }, [selectedApproach, interviewQuestion]);
+
+  // Select an approach (before submitting)
+  const selectApproach = useCallback((approachId) => {
+    if (!interviewSubmitted) {
+      setSelectedApproach(approachId);
+    }
+  }, [interviewSubmitted]);
+
+  // Submit interview answer
+  const submitInterview = useCallback(() => {
+    if (selectedApproach) {
+      setInterviewSubmitted(true);
+    }
+  }, [selectedApproach]);
+
+  // Proceed to coding after interview
+  const proceedToCoding = useCallback(() => {
+    setIsInterviewComplete(true);
+  }, []);
 
   // Update code for current step (only when not in review mode)
   const updateCode = useCallback((newCode) => {
@@ -189,6 +237,12 @@ export function useScaffoldedLearning(problem) {
 
   // Reset the entire problem
   const resetProblem = useCallback(() => {
+    // Reset interview state
+    setIsInterviewComplete(false);
+    setSelectedApproach(null);
+    setInterviewSubmitted(false);
+
+    // Reset coding state
     setCurrentStepIndex(0);
     setViewingStepIndex(0); // Also reset viewing step
     setUserCodeByStep(() => {
@@ -212,7 +266,17 @@ export function useScaffoldedLearning(problem) {
   }, [problem.steps]);
 
   return {
-    // State
+    // Interview state
+    hasInterviewQuestion,
+    isInterviewComplete,
+    selectedApproach,
+    interviewSubmitted,
+    interviewFeedback,
+    isInterviewCorrect,
+    isInterviewPartiallyCorrect,
+    interviewQuestion,
+
+    // Coding state
     currentStepIndex,
     viewingStepIndex,
     currentStep,
@@ -230,7 +294,12 @@ export function useScaffoldedLearning(problem) {
     isLastStep,
     progress,
 
-    // Actions
+    // Interview actions
+    selectApproach,
+    submitInterview,
+    proceedToCoding,
+
+    // Coding actions
     updateCode,
     revealNextHint,
     submitStep,

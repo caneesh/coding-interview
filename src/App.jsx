@@ -1087,6 +1087,331 @@ function PatternGraph({ patternGraph }) {
 }
 
 /**
+ * Approach Icon - renders icon for each interview approach option
+ */
+function ApproachIcon({ icon, className = "w-6 h-6" }) {
+  const icons = {
+    brute: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+      </svg>
+    ),
+    hash: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M9.243 3.03a1 1 0 01.727 1.213L9.53 6h2.94l.56-2.243a1 1 0 111.94.486L14.53 6H17a1 1 0 110 2h-2.97l-1 4H15a1 1 0 110 2h-2.47l-.56 2.242a1 1 0 11-1.94-.485L10.47 14H7.53l-.56 2.242a1 1 0 11-1.94-.485L5.47 14H3a1 1 0 110-2h2.97l1-4H5a1 1 0 110-2h2.47l.56-2.243a1 1 0 011.213-.727zM9.03 8l-1 4h2.94l1-4H9.03z" clipRule="evenodd" />
+      </svg>
+    ),
+    pointers: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    ),
+    sort: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z" />
+      </svg>
+    ),
+    recursion: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+      </svg>
+    ),
+    dp: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M5 4a3 3 0 00-3 3v6a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H5zm-1 9v-1h5v2H5a1 1 0 01-1-1zm7 1h4a1 1 0 001-1v-1h-5v2zm0-4h5V8h-5v2zM9 8H4v2h5V8z" clipRule="evenodd" />
+      </svg>
+    ),
+    default: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+      </svg>
+    )
+  };
+  return icons[icon] || icons.default;
+}
+
+/**
+ * Interview Simulation - "What Would You Try First?" Mode
+ * Forces users to think about approach before coding
+ */
+function InterviewSimulation({
+  problem,
+  interviewQuestion,
+  selectedApproach,
+  interviewSubmitted,
+  interviewFeedback,
+  isInterviewCorrect,
+  isInterviewPartiallyCorrect,
+  onSelectApproach,
+  onSubmit,
+  onProceed
+}) {
+  if (!interviewQuestion) return null;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 flex items-center justify-center p-8">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-8 py-6 text-white">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Interview Mode</h1>
+              <p className="text-violet-200 text-sm">Think before you code</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Problem Context */}
+        <div className="px-8 py-6 border-b border-gray-100 bg-gray-50">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="px-2 py-1 bg-violet-100 text-violet-700 text-xs font-semibold rounded">
+              {problem.difficulty}
+            </span>
+            <h2 className="font-semibold text-gray-900">{problem.title}</h2>
+          </div>
+          <p className="text-gray-600 text-sm">{problem.description}</p>
+        </div>
+
+        {/* Question */}
+        <div className="px-8 py-6">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="w-8 h-8 bg-violet-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-violet-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-lg font-medium text-gray-900">{interviewQuestion.prompt}</p>
+              <p className="text-sm text-gray-500 mt-1">{interviewQuestion.hint}</p>
+            </div>
+          </div>
+
+          {/* Options Grid */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {interviewQuestion.options.map((option) => {
+              const isSelected = selectedApproach === option.id;
+              const showResult = interviewSubmitted && isSelected;
+              const isCorrect = option.isCorrect;
+              const isPartial = option.isPartiallyCorrect;
+
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => !interviewSubmitted && onSelectApproach(option.id)}
+                  disabled={interviewSubmitted}
+                  className={`
+                    p-4 rounded-xl border-2 text-left transition-all duration-200
+                    ${interviewSubmitted
+                      ? isSelected
+                        ? isCorrect
+                          ? 'border-green-400 bg-green-50'
+                          : isPartial
+                            ? 'border-amber-400 bg-amber-50'
+                            : 'border-red-400 bg-red-50'
+                        : 'border-gray-200 bg-gray-50 opacity-50'
+                      : isSelected
+                        ? 'border-violet-400 bg-violet-50 ring-2 ring-violet-200'
+                        : 'border-gray-200 hover:border-violet-300 hover:bg-violet-50/50'
+                    }
+                  `}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`
+                      w-10 h-10 rounded-lg flex items-center justify-center
+                      ${interviewSubmitted && isSelected
+                        ? isCorrect
+                          ? 'bg-green-200 text-green-700'
+                          : isPartial
+                            ? 'bg-amber-200 text-amber-700'
+                            : 'bg-red-200 text-red-700'
+                        : isSelected
+                          ? 'bg-violet-200 text-violet-700'
+                          : 'bg-gray-100 text-gray-500'
+                      }
+                    `}>
+                      <ApproachIcon icon={option.icon} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-semibold ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>
+                          {option.label}
+                        </span>
+                        {showResult && (
+                          isCorrect ? (
+                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">OPTIMAL</span>
+                          ) : isPartial ? (
+                            <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">VALID</span>
+                          ) : null
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 truncate">{option.description}</p>
+                    </div>
+                    {isSelected && !interviewSubmitted && (
+                      <svg className="w-5 h-5 text-violet-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Submit Button (before submission) */}
+          {!interviewSubmitted && (
+            <button
+              onClick={onSubmit}
+              disabled={!selectedApproach}
+              className={`
+                w-full py-3 px-6 rounded-xl font-semibold text-lg transition-all duration-200
+                flex items-center justify-center gap-2
+                ${selectedApproach
+                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }
+              `}
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
+              </svg>
+              Lock In My Answer
+            </button>
+          )}
+
+          {/* Feedback (after submission) */}
+          {interviewSubmitted && interviewFeedback && (
+            <div className="animate-fadeIn">
+              {/* Result Banner */}
+              <div className={`
+                p-4 rounded-xl mb-4
+                ${isInterviewCorrect
+                  ? 'bg-green-100 border border-green-200'
+                  : isInterviewPartiallyCorrect
+                    ? 'bg-amber-100 border border-amber-200'
+                    : 'bg-red-100 border border-red-200'
+                }
+              `}>
+                <div className="flex items-center gap-3">
+                  <div className={`
+                    w-10 h-10 rounded-full flex items-center justify-center
+                    ${isInterviewCorrect
+                      ? 'bg-green-500 text-white'
+                      : isInterviewPartiallyCorrect
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-red-500 text-white'
+                    }
+                  `}>
+                    {isInterviewCorrect ? (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    ) : isInterviewPartiallyCorrect ? (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className={`font-bold text-lg ${
+                      isInterviewCorrect ? 'text-green-800' :
+                      isInterviewPartiallyCorrect ? 'text-amber-800' :
+                      'text-red-800'
+                    }`}>
+                      {interviewFeedback.title}
+                    </h3>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Feedback */}
+              <div className="bg-gray-50 rounded-xl p-5 space-y-4">
+                <div>
+                  <p className="text-gray-700">{interviewFeedback.explanation}</p>
+                </div>
+
+                {interviewFeedback.whyYes && (
+                  <div className="flex items-start gap-2 bg-green-50 p-3 rounded-lg">
+                    <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-green-800 text-sm"><span className="font-semibold">Why this works: </span>{interviewFeedback.whyYes}</p>
+                  </div>
+                )}
+
+                {interviewFeedback.whyNot && (
+                  <div className="flex items-start gap-2 bg-red-50 p-3 rounded-lg">
+                    <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-red-800 text-sm"><span className="font-semibold">Why not optimal: </span>{interviewFeedback.whyNot}</p>
+                  </div>
+                )}
+
+                {interviewFeedback.betterApproach && (
+                  <div className="flex items-start gap-2 bg-violet-50 p-3 rounded-lg">
+                    <svg className="w-5 h-5 text-violet-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+                    </svg>
+                    <p className="text-violet-800 text-sm"><span className="font-semibold">Think about: </span>{interviewFeedback.betterApproach}</p>
+                  </div>
+                )}
+
+                {interviewFeedback.interviewTip && (
+                  <div className="flex items-start gap-2 bg-blue-50 p-3 rounded-lg">
+                    <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-blue-800 text-sm"><span className="font-semibold">Interview Tip: </span>{interviewFeedback.interviewTip}</p>
+                  </div>
+                )}
+
+                {interviewFeedback.partialCredit && (
+                  <div className="flex items-start gap-2 bg-amber-50 p-3 rounded-lg">
+                    <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <p className="text-amber-800 text-sm">{interviewFeedback.partialCredit}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Proceed Button */}
+              <button
+                onClick={onProceed}
+                className="w-full mt-6 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold text-lg rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                {isInterviewCorrect ? "Let's Code It!" : "Learn By Coding"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Interview Context Footer */}
+        {!interviewSubmitted && interviewQuestion.interviewContext && (
+          <div className="px-8 py-4 bg-gray-50 border-t border-gray-100">
+            <p className="text-xs text-gray-500">
+              <span className="font-semibold">Pro tip:</span> {interviewQuestion.interviewContext.whatInterviewerWants}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
  * Victory/Completion screen component with confetti celebration
  */
 function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
@@ -1386,6 +1711,20 @@ function RightPanel({
  */
 function App() {
   const {
+    // Interview state
+    hasInterviewQuestion,
+    isInterviewComplete,
+    selectedApproach,
+    interviewSubmitted,
+    interviewFeedback,
+    isInterviewCorrect,
+    isInterviewPartiallyCorrect,
+    interviewQuestion,
+    // Interview actions
+    selectApproach,
+    submitInterview,
+    proceedToCoding,
+    // Coding state
     currentStepIndex,
     viewingStepIndex,
     viewingStep,
@@ -1400,6 +1739,7 @@ function App() {
     totalSteps,
     isLastStep,
     progress,
+    // Coding actions
     updateCode,
     revealNextHint,
     submitStep,
@@ -1416,6 +1756,24 @@ function App() {
         totalSteps={totalSteps}
         totalHintsUsed={totalHintsUsed}
         onReset={resetProblem}
+      />
+    );
+  }
+
+  // Show interview simulation if not yet completed
+  if (hasInterviewQuestion && !isInterviewComplete) {
+    return (
+      <InterviewSimulation
+        problem={sampleProblem}
+        interviewQuestion={interviewQuestion}
+        selectedApproach={selectedApproach}
+        interviewSubmitted={interviewSubmitted}
+        interviewFeedback={interviewFeedback}
+        isInterviewCorrect={isInterviewCorrect}
+        isInterviewPartiallyCorrect={isInterviewPartiallyCorrect}
+        onSelectApproach={selectApproach}
+        onSubmit={submitInterview}
+        onProceed={proceedToCoding}
       />
     );
   }
