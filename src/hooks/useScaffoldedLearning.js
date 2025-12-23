@@ -8,8 +8,11 @@ import { useState, useCallback, useMemo } from 'react';
  * @returns {Object} State and handlers for the scaffolded learning component
  */
 export function useScaffoldedLearning(problem) {
-  // Current step index (0-based)
+  // Current step index (0-based) - represents actual progress
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+
+  // Viewing step index - which step is currently being viewed (can differ from currentStepIndex in review mode)
+  const [viewingStepIndex, setViewingStepIndex] = useState(0);
 
   // User's code input for each step (keyed by stepId)
   const [userCodeByStep, setUserCodeByStep] = useState(() => {
@@ -37,7 +40,23 @@ export function useScaffoldedLearning(problem) {
     [problem.steps, currentStepIndex]
   );
 
+  // The step being viewed (may differ from currentStep in review mode)
+  const viewingStep = useMemo(() =>
+    problem.steps[viewingStepIndex],
+    [problem.steps, viewingStepIndex]
+  );
+
+  // Review mode: viewing a completed step that isn't the current active step
+  const isReviewMode = viewingStepIndex < currentStepIndex;
+
+  // Code for the step being viewed
   const userCode = useMemo(() =>
+    userCodeByStep[viewingStep?.stepId] || '',
+    [userCodeByStep, viewingStep]
+  );
+
+  // Code for the current active step (used when returning from review)
+  const activeStepCode = useMemo(() =>
     userCodeByStep[currentStep?.stepId] || '',
     [userCodeByStep, currentStep]
   );
@@ -46,9 +65,9 @@ export function useScaffoldedLearning(problem) {
   const isLastStep = currentStepIndex === totalSteps - 1;
   const progress = ((currentStepIndex + (isCompleted ? 1 : 0)) / totalSteps) * 100;
 
-  // Update code for current step
+  // Update code for current step (only when not in review mode)
   const updateCode = useCallback((newCode) => {
-    if (!currentStep) return;
+    if (!currentStep || isReviewMode) return;
 
     setUserCodeByStep(prev => ({
       ...prev,
@@ -60,10 +79,10 @@ export function useScaffoldedLearning(problem) {
       setValidationMessage(null);
       setIsValidationError(false);
     }
-  }, [currentStep, validationMessage]);
+  }, [currentStep, validationMessage, isReviewMode]);
 
-  // Derived hint state
-  const maxHints = currentStep?.hints?.length || 0;
+  // Derived hint state (based on viewing step)
+  const maxHints = viewingStep?.hints?.length || 0;
   const hasMoreHints = hintLevel < maxHints;
 
   // Reveal next hint (increments hint level)
@@ -110,7 +129,9 @@ export function useScaffoldedLearning(problem) {
         setIsValidationError(false);
       } else {
         // Move to next step
-        setCurrentStepIndex(prev => prev + 1);
+        const nextIndex = currentStepIndex + 1;
+        setCurrentStepIndex(nextIndex);
+        setViewingStepIndex(nextIndex); // Also update viewing to the new step
         setValidationMessage('Correct! Moving to the next step...');
         setIsValidationError(false);
         setHintLevel(0); // Reset hint level for next step
@@ -128,19 +149,28 @@ export function useScaffoldedLearning(problem) {
     return isValid;
   }, [validateStep, isLastStep]);
 
-  // Reset to a specific step (for navigation if needed)
-  const goToStep = useCallback((stepIndex) => {
+  // View a specific step (for review mode - doesn't change progress)
+  const viewStep = useCallback((stepIndex) => {
     if (stepIndex >= 0 && stepIndex <= currentStepIndex) {
-      setCurrentStepIndex(stepIndex);
-      setHintLevel(0); // Reset hint level when navigating
+      setViewingStepIndex(stepIndex);
+      setHintLevel(0); // Reset hint level when viewing different step
       setValidationMessage(null);
       setIsValidationError(false);
     }
   }, [currentStepIndex]);
 
+  // Return to current active step from review mode
+  const returnToCurrentStep = useCallback(() => {
+    setViewingStepIndex(currentStepIndex);
+    setHintLevel(0);
+    setValidationMessage(null);
+    setIsValidationError(false);
+  }, [currentStepIndex]);
+
   // Reset the entire problem
   const resetProblem = useCallback(() => {
     setCurrentStepIndex(0);
+    setViewingStepIndex(0); // Also reset viewing step
     setUserCodeByStep(() => {
       const initial = {};
       problem.steps.forEach(step => {
@@ -157,8 +187,11 @@ export function useScaffoldedLearning(problem) {
   return {
     // State
     currentStepIndex,
+    viewingStepIndex,
     currentStep,
+    viewingStep,
     userCode,
+    isReviewMode,
     hintLevel,
     maxHints,
     hasMoreHints,
@@ -173,7 +206,8 @@ export function useScaffoldedLearning(problem) {
     updateCode,
     revealNextHint,
     submitStep,
-    goToStep,
+    viewStep,
+    returnToCurrentStep,
     resetProblem,
   };
 }
