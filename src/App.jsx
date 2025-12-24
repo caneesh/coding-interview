@@ -6,6 +6,11 @@ import { sampleProblem } from './data/sampleProblem';
 import { patternVault } from './data/patternVault';
 import { languages, getFileName, editorOptions } from './data/languageConfig';
 import {
+  recommendNextProblem,
+  getMotivationalMessage,
+  recommendationTypes,
+} from './services/recommendationService';
+import {
   reviewCode,
   generateHint,
   explainConcept,
@@ -3325,17 +3330,260 @@ function InterviewSimulation({
 }
 
 /**
+ * Next Challenge Card - Recommendation UI for keeping users engaged
+ * Slides up after problem completion to suggest the next problem
+ */
+function NextChallengeCard({
+  recommendation,
+  onAccept,
+  onDecline,
+  countdown,
+  isVisible,
+}) {
+  if (!recommendation || !isVisible) return null;
+
+  const { problem, type, reason } = recommendation;
+
+  // Color schemes for different recommendation types
+  const colorSchemes = {
+    variation: {
+      bg: 'from-purple-600 to-indigo-700',
+      badge: 'bg-purple-500',
+      button: 'from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700',
+      glow: 'shadow-purple-500/25',
+    },
+    newTopic: {
+      bg: 'from-blue-600 to-cyan-600',
+      badge: 'bg-blue-500',
+      button: 'from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700',
+      glow: 'shadow-blue-500/25',
+    },
+    reinforcement: {
+      bg: 'from-green-600 to-emerald-600',
+      badge: 'bg-green-500',
+      button: 'from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700',
+      glow: 'shadow-green-500/25',
+    },
+    easyWin: {
+      bg: 'from-teal-600 to-cyan-600',
+      badge: 'bg-teal-500',
+      button: 'from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700',
+      glow: 'shadow-teal-500/25',
+    },
+    stretch: {
+      bg: 'from-orange-500 to-red-600',
+      badge: 'bg-orange-500',
+      button: 'from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700',
+      glow: 'shadow-orange-500/25',
+    },
+  };
+
+  const colors = colorSchemes[type.type] || colorSchemes.reinforcement;
+
+  // Difficulty colors
+  const difficultyColors = {
+    Easy: 'bg-green-500 text-white',
+    Medium: 'bg-amber-500 text-white',
+    Hard: 'bg-red-500 text-white',
+  };
+
+  return (
+    <div
+      className={`
+        fixed bottom-0 left-0 right-0 z-50
+        transform transition-all duration-700 ease-out
+        ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}
+      `}
+    >
+      {/* Backdrop blur */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
+
+      {/* Card */}
+      <div className={`
+        relative mx-auto max-w-2xl
+        bg-gradient-to-br ${colors.bg}
+        rounded-t-3xl shadow-2xl ${colors.glow}
+        p-6 pb-8
+      `}>
+        {/* Decorative top handle */}
+        <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-12 h-1.5 bg-white/30 rounded-full" />
+
+        {/* Header */}
+        <div className="text-center mb-5 mt-2">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 rounded-full mb-3">
+            <span className="text-white/90 text-sm font-medium">Recommended Next Step</span>
+            {countdown !== null && countdown > 0 && (
+              <span className="flex items-center gap-1 text-white/70 text-sm">
+                <svg className="w-4 h-4 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
+                Auto-start in {countdown}s
+              </span>
+            )}
+          </div>
+
+          {/* Recommendation Type Badge */}
+          <div className={`inline-flex items-center gap-2 px-4 py-2 ${colors.badge} rounded-xl mb-4`}>
+            <span className="text-2xl">{type.emoji}</span>
+            <div className="text-left">
+              <div className="text-white font-bold text-lg">{type.label}</div>
+              <div className="text-white/80 text-sm">{type.description}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Problem Preview */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 mb-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <span className={`px-3 py-1 ${difficultyColors[problem.difficulty] || difficultyColors.Medium} text-sm font-bold rounded-lg`}>
+                  {problem.difficulty}
+                </span>
+                {problem.estimatedTime && (
+                  <span className="text-white/70 text-sm flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    ~{problem.estimatedTime} min
+                  </span>
+                )}
+              </div>
+              <h3 className="text-white text-xl font-bold mb-2">{problem.title}</h3>
+              <p className="text-white/80 text-sm leading-relaxed">{reason}</p>
+            </div>
+
+            {/* Pattern Icon */}
+            <div className="flex-shrink-0 w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Concepts Tags */}
+          {problem.concepts && (
+            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/10">
+              {problem.concepts.slice(0, 4).map((concept, idx) => (
+                <span key={idx} className="px-2 py-1 bg-white/10 text-white/80 text-xs rounded-lg">
+                  {concept.replace('-', ' ')}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={onDecline}
+            className="flex-1 py-3 px-6 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+            </svg>
+            Back to Dashboard
+          </button>
+          <button
+            onClick={onAccept}
+            className={`flex-[2] py-3 px-6 bg-gradient-to-r ${colors.button} text-white font-bold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group`}
+          >
+            <span>Accept Challenge</span>
+            <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Progress streak indicator */}
+        <div className="mt-5 pt-4 border-t border-white/10 text-center">
+          <div className="inline-flex items-center gap-2 text-white/60 text-sm">
+            <span className="text-lg">🔥</span>
+            <span>Keep your momentum going! You're on a roll.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Victory/Completion screen component with confetti celebration
+ * Now includes NextChallengeCard recommendation after celebration
  */
 function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
   const { width, height } = useWindowSize();
   const [showConfetti, setShowConfetti] = useState(true);
+  const [showRecommendation, setShowRecommendation] = useState(false);
+  const [recommendation, setRecommendation] = useState(null);
+  const [countdown, setCountdown] = useState(null);
+  const countdownRef = useRef(null);
 
   // Stop confetti after 8 seconds
   useEffect(() => {
     const timer = setTimeout(() => setShowConfetti(false), 8000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Show recommendation after 3 seconds (let confetti settle)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Get recommendation based on completed problem
+      const rec = recommendNextProblem({
+        currentProblemId: problem.id,
+        hintsUsed: totalHintsUsed,
+        timeSpentMinutes: 15, // Mock time for now
+        completedProblemIds: [problem.id],
+      });
+      setRecommendation(rec);
+      setShowRecommendation(true);
+      setCountdown(15); // Start 15 second countdown
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [problem.id, totalHintsUsed]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (countdown === null || countdown <= 0) return;
+
+    countdownRef.current = setTimeout(() => {
+      setCountdown(prev => prev - 1);
+    }, 1000);
+
+    return () => {
+      if (countdownRef.current) {
+        clearTimeout(countdownRef.current);
+      }
+    };
+  }, [countdown]);
+
+  // Auto-accept when countdown reaches 0
+  useEffect(() => {
+    if (countdown === 0 && recommendation) {
+      handleAcceptChallenge();
+    }
+  }, [countdown, recommendation]);
+
+  const handleAcceptChallenge = () => {
+    // Clear countdown
+    if (countdownRef.current) {
+      clearTimeout(countdownRef.current);
+    }
+    // In a real app, this would navigate to the next problem
+    // For now, we'll show an alert and reset
+    alert(`Starting: ${recommendation.problem.title}\n\nNote: In the full app, this would load the new problem. For this demo, we'll restart the current problem.`);
+    onReset();
+  };
+
+  const handleDecline = () => {
+    // Clear countdown and hide recommendation
+    if (countdownRef.current) {
+      clearTimeout(countdownRef.current);
+    }
+    setShowRecommendation(false);
+    setCountdown(null);
+  };
 
   // Calculate performance rating based on hints used
   const getPerformanceRating = () => {
@@ -3346,6 +3594,7 @@ function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
   };
 
   const rating = getPerformanceRating();
+  const motivationalMessage = getMotivationalMessage(totalHintsUsed, totalSteps);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-start justify-center p-8 relative overflow-auto">
@@ -3363,7 +3612,7 @@ function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
       )}
 
       {/* Success Card */}
-      <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-2xl w-full text-center relative z-10 animate-fadeIn my-8">
+      <div className={`bg-white rounded-3xl shadow-2xl p-10 max-w-2xl w-full text-center relative z-10 animate-fadeIn my-8 transition-all duration-500 ${showRecommendation ? 'mb-80' : ''}`}>
         {/* Trophy Icon */}
         <div className="relative mb-8">
           <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
@@ -3406,6 +3655,17 @@ function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
           </div>
         </div>
 
+        {/* Motivational Message */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 mb-8 border border-purple-100">
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-3xl">{motivationalMessage.emoji}</span>
+            <div className="text-left">
+              <div className="font-semibold text-purple-800">{motivationalMessage.title}</div>
+              <div className="text-purple-600 text-sm">{motivationalMessage.message}</div>
+            </div>
+          </div>
+        </div>
+
         {/* Concept Lens - Pattern Recognition Training */}
         <ConceptLens
           concepts={problem.concepts}
@@ -3432,7 +3692,27 @@ function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
           </svg>
           Restart Problem
         </button>
+
+        {/* "Next Up" teaser when recommendation is loading */}
+        {!showRecommendation && (
+          <div className="mt-6 text-gray-400 text-sm flex items-center justify-center gap-2">
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            Finding your next challenge...
+          </div>
+        )}
       </div>
+
+      {/* Next Challenge Card - Slides up from bottom */}
+      <NextChallengeCard
+        recommendation={recommendation}
+        onAccept={handleAcceptChallenge}
+        onDecline={handleDecline}
+        countdown={countdown}
+        isVisible={showRecommendation}
+      />
     </div>
   );
 }
