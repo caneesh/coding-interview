@@ -19,6 +19,7 @@ import {
   clearAIConfig
 } from './services/aiService';
 import { AuthButton } from './components/auth';
+import { StepZeroWizard } from './components/step-zero';
 
 /**
  * Custom hook to get window dimensions for confetti
@@ -4031,22 +4032,21 @@ function App() {
     );
   }
 
-  // Step Zero: Show pattern selector first (editor is locked until correct)
+  // Step Zero: Show Socratic pattern wizard first (editor is locked until correct)
   if (hasPatternSelection && !isPatternComplete) {
     return (
-      <PatternSelector
-        problem={sampleProblem}
-        patternSelection={patternSelection}
-        selectedPattern={selectedPattern}
-        patternSubmitted={patternSubmitted}
-        patternFeedback={patternFeedback}
-        isPatternCorrect={isPatternCorrect}
-        patternAttempts={patternAttempts}
-        onSelectPattern={selectPattern}
-        onSubmit={submitPattern}
-        onRetry={retryPattern}
-        onProceed={proceedFromPattern}
-      />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-8">
+        <StepZeroWizard
+          problemId={sampleProblem.id}
+          correctStrategy={patternSelection?.correctAnswer || 'two-pointers'}
+          onComplete={(result) => {
+            console.log('Step Zero completed:', result);
+          }}
+          onStrategyConfirmed={() => {
+            proceedFromPattern();
+          }}
+        />
+      </div>
     );
   }
 
