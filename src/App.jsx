@@ -18,6 +18,7 @@ import {
   configureAI,
   clearAIConfig
 } from './services/aiService';
+import { AuthButton } from './components/auth';
 
 /**
  * Custom hook to get window dimensions for confetti
@@ -4120,6 +4121,7 @@ function App() {
               </svg>
               Reset
             </button>
+            <AuthButton />
           </div>
         </div>
       </nav>
